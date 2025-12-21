@@ -35,3 +35,6 @@ if status is-interactive
         echo -en "\e]133;A\e\\"
     end
 end
+
+# Created by `pipx` on 2025-10-27 09:17:42
+set PATH $PATH /home/emon/.local/bin
