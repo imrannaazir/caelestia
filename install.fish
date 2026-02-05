@@ -4,10 +4,10 @@ argparse -n 'install.fish' -X 0 \
     'h/help' \
     'noconfirm' \
     'spotify' \
-    'vscode=?!contains -- "$_flag_value" codium code' \
+    'vscode=?' \
     'discord' \
     'zen' \
-    'aur-helper=!contains -- "$_flag_value" yay paru' \
+    'aur-helper=' \
     -- $argv
 or exit
 
@@ -80,6 +80,24 @@ set -q _flag_aur_helper && set -l aur_helper $_flag_aur_helper || set -l aur_hel
 set -q XDG_CONFIG_HOME && set -l config $XDG_CONFIG_HOME || set -l config $HOME/.config
 set -q XDG_STATE_HOME && set -l state $XDG_STATE_HOME || set -l state $HOME/.local/state
 
+if set -q _flag_vscode
+    if test -z "$_flag_vscode"
+        set -g _flag_vscode codium
+    end
+
+    if not contains -- "$_flag_vscode" codium code
+        echo "install.fish: --vscode must be one of: codium, code" >&2
+        exit 2
+    end
+end
+
+if set -q _flag_aur_helper
+    if not contains -- "$aur_helper" yay paru
+        echo "install.fish: --aur-helper must be one of: yay, paru" >&2
+        exit 2
+    end
+end
+
 # Startup prompt
 set_color magenta
 echo '╭─────────────────────────────────────────────────╮'
@@ -95,7 +113,7 @@ log 'Welcome to the Caelestia dotfiles installer!'
 log 'Before continuing, please ensure you have made a backup of your config directory.'
 
 # Prompt for backup
-if ! set -q _flag_noconfirm
+if not set -q _flag_noconfirm
     log '[1] Two steps ahead of you!  [2] Make one for me please!'
     input '=> ' -n
     set -l choice (sh-read)
@@ -126,7 +144,7 @@ end
 
 
 # Install AUR helper if not already installed
-if ! pacman -Q $aur_helper &> /dev/null
+if not pacman -Q $aur_helper >/dev/null 2>&1
     log "$aur_helper not installed. Installing..."
 
     # Install
@@ -296,7 +314,7 @@ if set -q _flag_zen
 end
 
 # Generate scheme stuff if needed
-if ! test -f $state/caelestia/scheme.json
+if not test -f $state/caelestia/scheme.json
     caelestia scheme set -n shadotheme
     sleep .5
     hyprctl reload
